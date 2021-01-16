@@ -27,8 +27,6 @@ module.exports = function elasticsearch(config) {
 					error.response.error.type === 'resource_already_exists_exception') {
 				return;
 			}
-			console.warn(
-					'INDEXER', 'Cannot create index', collection, error.toString());
 			throw error;
 		}
 	}
@@ -41,8 +39,7 @@ module.exports = function elasticsearch(config) {
 			if (error.response && error.response.status === 404) {
 				return;
 			}
-			console.warn(
-					'INDEXER', 'Cannot drop index', collection, error.toString());
+			throw error
 		}
 	}
 
@@ -55,19 +52,12 @@ module.exports = function elasticsearch(config) {
 			if (error.response && error.response.status === 404) {
 				return;
 			}
-			console.warn(
-					'INDEXER', 'Cannot delete', `${collection}/${id}`, error.toString());
+			throw error;
 		}
 	}
 
 	async function updateItem(collection, id, data)
 	{
-		try {
-			return await axios.post(
-					`${config.host}/${collection}/_doc/${id}`, data, axiosConfig);
-		} catch (error) {
-			console.warn(
-					'INDEXER', 'Cannot index', `${collection}/${id}`, error.toString());
-		}
+		return await axios.post(`${config.host}/${collection}/_doc/${id}`, data, axiosConfig);
 	}
 };

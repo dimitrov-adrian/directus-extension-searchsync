@@ -29,11 +29,27 @@ module.exports = function registerHook({services, env, database}) {
 	{
 		for (const collection of Object.keys(extensionConfig.collections)) {
 			if (extensionConfig.reindexOnStart) {
-				await indexer.dropIndex(collection);
-				await indexer.createIndex(collection);
+				try {
+					await indexer.dropIndex(collection);
+				} catch (error) {
+					errorLog('DROP', collection, null, error);
+				}
+
+				try {
+					await indexer.createIndex(collection);
+				} catch (error) {
+					errorLog('CREATE', collection, null, error);
+					continue;
+				}
+
 				reindexCollection(collection);
 			} else {
-				indexer.createIndex(collection);
+				try {
+					await indexer.createIndex(collection);
+				} catch (error) {
+					errorLog('CREATE', collection, null, error);
+					continue;
+				}
 			}
 		}
 	}
@@ -48,23 +64,30 @@ module.exports = function registerHook({services, env, database}) {
 			filter: extensionConfig.collections[collection].filter || [],
 		});
 		for (const item of items) {
-			const body = await getItemObject(collection, item[pk], schema);
-			indexer.updateItem(collection, item[pk], body, pk);
+			await updateItemIndex(collection, item[pk], schema);
 		}
 	}
 
 	async function deleteItemIndex(collection, id)
 	{
-		indexer.deleteItem(collection, id);
+		try {
+			indexer.deleteItem(collection, id);
+		} catch (error) {
+			errorLog('delete', collection, id, error)
+		}
 	}
 
 	async function updateItemIndex(collection, id, schema)
 	{
 		const body = getItemObject(collection, id, schema);
-		if (body) {
-			indexer.updateItem(collection, id, body);
-		} else {
-			indexer.deleteItem(collection, id);
+		try {
+			if (body) {
+				indexer.updateItem(collection, id, body);
+			} else {
+				indexer.deleteItem(collection, id);
+			}
+		} catch (error) {
+			errorLog('update', collection, id, error)
 		}
 	}
 
@@ -89,6 +112,10 @@ module.exports = function registerHook({services, env, database}) {
 		for (const item of items) {
 			callback(input.collection, item, input.schema);
 		}
+	}
+
+	function errorLog(action, collection, id, error) {
+		console.warn('SEARCHSYNC',`Error when ${action} ${collection}/${id || ''}`, (error ? '' : error.toString()));
 	}
 
 };

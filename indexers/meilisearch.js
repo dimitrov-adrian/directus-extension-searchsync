@@ -30,8 +30,7 @@ module.exports = function meilisearch(config) {
 			if (error.response && error.response.status === 404) {
 				return;
 			}
-			console.warn(
-					'INDEXER', 'Cannot drop index', collection, error.toString());
+			throw error;
 		}
 	}
 
@@ -44,21 +43,15 @@ module.exports = function meilisearch(config) {
 			if (error.response && error.response.status === 404) {
 				return;
 			}
-			console.warn(
-					'INDEXER', 'Cannot delete', `${collection}/${id}`, error.toString());
+			throw error;
 		}
 	}
 
 	async function updateItem(collection, id, data, pk)
 	{
-		try {
-			return await axios.post(
-					`${config.host}/indexes/${collection}/documents?primaryKey=${pk}`,
-					[{id, ...data}], axiosConfig,
-			);
-		} catch (error) {
-			console.warn(
-					'INDEXER', 'Cannot index', `${collection}/${id}`, error.toString());
-		}
+		return await axios.post(
+				`${config.host}/indexes/${collection}/documents?primaryKey=${pk}`,
+				[{id, ...data}], axiosConfig,
+		);
 	}
 };
