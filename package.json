@@ -1,0 +1,13 @@
+{
+  "name": "directus-extension-searchsync",
+  "version": "1.0.0-beta",
+  "author": {
+    "email": "dimitrov.adrian@gmail.com",
+    "name": "Adrian Dimitrov"
+  },
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.21.1"
+  }
+}
