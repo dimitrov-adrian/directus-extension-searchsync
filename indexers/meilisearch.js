@@ -1,13 +1,12 @@
-const axios = require('axios');
+const axios = require("axios");
 
 module.exports = function meilisearch(config) {
-
 	const axiosConfig = {
 		headers: config.headers || {},
 	};
 
 	if (config.key) {
-		axiosConfig.headers['X-Meili-API-Key'] = config.key;
+		axiosConfig.headers["X-Meili-API-Key"] = config.key;
 	}
 
 	return {
@@ -17,15 +16,14 @@ module.exports = function meilisearch(config) {
 		updateItem,
 	};
 
-	async function createIndex(collection)
-	{
-	}
+	async function createIndex(collection) {}
 
-	async function dropIndex(collection)
-	{
+	async function dropIndex(collection) {
 		try {
 			return await axios.delete(
-					`${config.host}/indexes/${collection}`, axiosConfig);
+				`${config.host}/indexes/${collection}`,
+				axiosConfig
+			);
 		} catch (error) {
 			if (error.response && error.response.status === 404) {
 				return;
@@ -34,11 +32,12 @@ module.exports = function meilisearch(config) {
 		}
 	}
 
-	async function deleteItem(collection, id)
-	{
+	async function deleteItem(collection, id) {
 		try {
 			return await axios.delete(
-					`${config.host}/indexes/${collection}/documents/${id}`, axiosConfig);
+				`${config.host}/indexes/${collection}/documents/${id}`,
+				axiosConfig
+			);
 		} catch (error) {
 			if (error.response && error.response.status === 404) {
 				return;
@@ -47,11 +46,11 @@ module.exports = function meilisearch(config) {
 		}
 	}
 
-	async function updateItem(collection, id, data, pk)
-	{
+	async function updateItem(collection, id, data, pk) {
 		return await axios.post(
-				`${config.host}/indexes/${collection}/documents?primaryKey=${pk}`,
-				[{id, ...data}], axiosConfig,
+			`${config.host}/indexes/${collection}/documents?primaryKey=${pk}`,
+			[{ id, ...data }],
+			axiosConfig
 		);
 	}
 };

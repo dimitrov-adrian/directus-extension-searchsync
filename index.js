@@ -1,44 +1,43 @@
-module.exports = function registerHook({services, env, database}) {
+module.exports = function registerHook({ services, env, database }) {
+	const { schemaInspector } = require(env.DIRECTUS_DEV
+		? require.main.path + "/../dist/database"
+		: "directus/dist/database");
 
-	const {schemaInspector} = require(env.DIRECTUS_DEV
-			? require.main.path + '/../dist/database'
-			: 'directus/dist/database');
+	const extensionConfig = require(env.EXTENSION_SEARCHSYNC_CONFIG ||
+		"./config.json");
 
-	const extensionConfig = require(
-			env.EXTENSION_SEARCHSYNC_CONFIG || './config.json');
-
-	if (!('collections' in extensionConfig)) {
+	if (!("collections" in extensionConfig)) {
 		throw Error('Broken config file. Missing "collections" section.');
 	}
 
-	if (!('server' in extensionConfig)) {
+	if (!("server" in extensionConfig)) {
 		throw Error('Broken config file. Missing "server" section.');
 	}
 
 	const indexer = require(`./indexers/${extensionConfig.server.type}`)(
-			extensionConfig.server);
+		extensionConfig.server
+	);
 
 	return {
-		'server.start': initCollectionIndexes,
-		'items.create': hookEventHandler.bind(null, updateItemIndex),
-		'items.update': hookEventHandler.bind(null, updateItemIndex),
-		'items.delete': hookEventHandler.bind(null, deleteItemIndex),
+		"server.start": initCollectionIndexes,
+		"items.create": hookEventHandler.bind(null, updateItemIndex),
+		"items.update": hookEventHandler.bind(null, updateItemIndex),
+		"items.delete": hookEventHandler.bind(null, deleteItemIndex),
 	};
 
-	async function initCollectionIndexes()
-	{
+	async function initCollectionIndexes() {
 		for (const collection of Object.keys(extensionConfig.collections)) {
 			if (extensionConfig.reindexOnStart) {
 				try {
 					await indexer.dropIndex(collection);
 				} catch (error) {
-					errorLog('DROP', collection, null, error);
+					errorLog("DROP", collection, null, error);
 				}
 
 				try {
 					await indexer.createIndex(collection);
 				} catch (error) {
-					errorLog('CREATE', collection, null, error);
+					errorLog("CREATE", collection, null, error);
 					continue;
 				}
 
@@ -47,17 +46,16 @@ module.exports = function registerHook({services, env, database}) {
 				try {
 					await indexer.createIndex(collection);
 				} catch (error) {
-					errorLog('CREATE', collection, null, error);
+					errorLog("CREATE", collection, null, error);
 					continue;
 				}
 			}
 		}
 	}
 
-	async function reindexCollection(collection)
-	{
+	async function reindexCollection(collection) {
 		const schema = await schemaInspector.overview();
-		const query = new services.ItemsService(collection, {database, schema});
+		const query = new services.ItemsService(collection, { database, schema });
 		const pk = schema[collection].primary;
 		const items = await query.readByQuery({
 			fields: [pk],
@@ -68,55 +66,53 @@ module.exports = function registerHook({services, env, database}) {
 		}
 	}
 
-	async function deleteItemIndex(collection, id)
-	{
+	async function deleteItemIndex(collection, id) {
 		try {
 			indexer.deleteItem(collection, id);
 		} catch (error) {
-			errorLog('delete', collection, id, error)
+			errorLog("delete", collection, id, error);
 		}
 	}
 
-	async function updateItemIndex(collection, id, schema)
-	{
-		const body = getItemObject(collection, id, schema);
+	async function updateItemIndex(collection, id, schema) {
+		const body = await getItemObject(collection, id, schema);
 		try {
 			if (body) {
-				indexer.updateItem(collection, id, body);
+				indexer.updateItem(collection, id, body, schema[collection].primary);
 			} else {
 				indexer.deleteItem(collection, id);
 			}
 		} catch (error) {
-			errorLog('update', collection, id, error)
+			errorLog("update", collection, id, error);
 		}
 	}
 
-	async function getItemObject(collection, id, schema)
-	{
-		const query = new services.ItemsService(
-				collection, {knex: database, schema: schema});
+	async function getItemObject(collection, id, schema) {
+		const query = new services.ItemsService(collection, {
+			knex: database,
+			schema: schema,
+		});
 		return await query.readByKey(id, {
 			fields: extensionConfig.collections[collection].fields,
 			filter: extensionConfig.collections[collection].filter || [],
 		});
 	}
 
-	function hookEventHandler(callback, input)
-	{
+	function hookEventHandler(callback, input) {
 		if (!(input.collection in extensionConfig.collections)) {
 			return;
 		}
-		const items = (Array.isArray(input.item)
-				? input.item
-				: [input.item]);
+		const items = Array.isArray(input.item) ? input.item : [input.item];
 		for (const item of items) {
 			callback(input.collection, item, input.schema);
 		}
 	}
 
 	function errorLog(action, collection, id, error) {
-		console.warn('SEARCHSYNC',`Error when ${action} ${collection}/${id || ''}`, (error ? '' : error.toString()));
+		console.warn(
+			"SEARCHSYNC",
+			`Error when ${action} ${collection}/${id || ""}`,
+			error ? "" : error.toString()
+		);
 	}
-
 };
-
