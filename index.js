@@ -1,3 +1,5 @@
+const flattenObject = require('./utils');
+
 module.exports = function registerHook({ services, env, database, getSchema }) {
 	const extensionConfig = require(env.EXTENSION_SEARCHSYNC_CONFIG ||
 		"./config.json");
@@ -88,10 +90,15 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 			knex: database,
 			schema: schema,
 		});
-		return await query.readByKey(id, {
+		const data = await query.readByKey(id, {
 			fields: extensionConfig.collections[collection].fields,
 			filter: extensionConfig.collections[collection].filter || [],
 		});
+		if (extensionConfig.collections[collection].flatten) {
+			return flattenObject(data);
+		} else {
+			return data;
+		}
 	}
 
 	function hookEventHandler(callback, input) {

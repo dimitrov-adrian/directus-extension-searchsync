@@ -27,7 +27,8 @@
 		"category.title",
 		"description",
 		"tags.tags_id.tag"
-	  ]
+	  ],
+	  "flatten": true
 	}
   }
 }
