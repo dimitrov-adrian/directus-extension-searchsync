@@ -1,4 +1,4 @@
-module.exports = function flattenObject(ob) {
+function flattenObject(ob) {
 	var toReturn = {};
 
 	for (var i in ob) {
@@ -17,3 +17,20 @@ module.exports = function flattenObject(ob) {
 	}
 	return toReturn;
 }
+
+/**
+ * Returns a new object with the values at each key mapped using mapFn(value)
+ */
+function objectMap(object, mapFn) {
+  return Object.keys(object).reduce(function(result, key) {
+		const value = object[key];
+		if (value instanceof Object) {
+			result[key] = value;
+		} else {
+    	result[key] = mapFn(object[key]);
+		}
+    return result;
+  }, {});
+}
+
+module.exports = { flattenObject, objectMap };
