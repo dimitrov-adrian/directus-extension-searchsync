@@ -1,4 +1,5 @@
-const { flattenObject, objectMap } = require('./utils');
+const { flattenObject, objectMap } = require("./utils");
+const striptags = require("striptags");
 
 module.exports = function registerHook({ services, env, database, getSchema }) {
 	const extensionConfig = require(env.EXTENSION_SEARCHSYNC_CONFIG ||
@@ -54,7 +55,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 	async function reindexCollection(collection) {
 		const schema = await getSchema();
 		const query = new services.ItemsService(collection, { database, schema });
-		const pk = schema['tables'][collection].primary;
+		const pk = schema.collections[collection].primary;
 		const items = await query.readByQuery({
 			fields: [pk],
 			filter: extensionConfig.collections[collection].filter || [],
@@ -76,7 +77,12 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		const body = await getItemObject(collection, id, schema);
 		try {
 			if (body) {
-				indexer.updateItem(collection, id, body, schema['tables'][collection].primary);
+				indexer.updateItem(
+					collection,
+					id,
+					body,
+					schema.collections[collection].primary
+				);
 			} else {
 				indexer.deleteItem(collection, id);
 			}
@@ -90,6 +96,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 			knex: database,
 			schema: schema,
 		});
+
 		let data = await query.readByKey(id, {
 			fields: extensionConfig.collections[collection].fields,
 			filter: extensionConfig.collections[collection].filter || [],
@@ -98,11 +105,10 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		if (extensionConfig.collections[collection].flatten) {
 			data = flattenObject(data);
 		}
+
 		if (extensionConfig.collections[collection].stripHtml) {
-			data = objectMap(data,
-				(value) => typeof value === 'string' 
-					? value.replace(/(<([^>]+)>)/gi, " ")
-					: value
+			data = objectMap(data, (value) =>
+				typeof value === "string" ? striptags(value) : value
 			);
 		}
 
