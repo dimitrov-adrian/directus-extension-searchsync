@@ -155,7 +155,9 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 			return join(configPath, "searchsync.config.js");
 		}
 
-		throw Error("SEARCHSYNC: Configuration file does not exists.");
+		throw Error(
+			`SEARCHSYNC: Configuration file does not exists in ${configPath}/searchsync.config.[json|js]`
+		);
 	}
 
 	function errorLog(log) {
