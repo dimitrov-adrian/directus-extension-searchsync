@@ -17,14 +17,14 @@ module.exports = {
 				"category.title",
 				"description",
 			],
-			formatter,
+			transform: formatter,
 		},
 		blog_posts: {
 			filter: {
 				status: "published",
 			},
 			fields: ["title", "category.title", "description", "tags.tags_id.tag"],
-			formatter,
+			transform: formatter,
 		},
 	},
 };

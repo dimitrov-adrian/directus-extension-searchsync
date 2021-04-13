@@ -6,12 +6,14 @@ const { flattenObject, objectMap } = require("./utils");
 module.exports = function registerHook({ services, env, database, getSchema }) {
 	const extensionConfig = getConfig(getConfigFile());
 
-	if (!("collections" in extensionConfig)) {
-		throw Error('Broken config file. Missing "collections" section.');
+	if (!extensionConfig.collections) {
+		throw Error(
+			'SEARCHSYNC: Broken config file. Missing "collections" section.'
+		);
 	}
 
-	if (!("server" in extensionConfig)) {
-		throw Error('Broken config file. Missing "server" section.');
+	if (!extensionConfig.server) {
+		throw Error('SEARCHSYNC: Broken config file. Missing "server" section.');
 	}
 
 	const indexer = require(`./indexers/${extensionConfig.server.type}`)(
@@ -31,13 +33,13 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 				try {
 					await indexer.dropIndex(collection);
 				} catch (error) {
-					errorLog("DROP", collection, null, error);
+					errorLog({ action: "DROP", collection, error });
 				}
 
 				try {
 					await indexer.createIndex(collection);
 				} catch (error) {
-					errorLog("CREATE", collection, null, error);
+					errorLog({ action: "CREATE", collection, error });
 					continue;
 				}
 
@@ -46,7 +48,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 				try {
 					await indexer.createIndex(collection);
 				} catch (error) {
-					errorLog("CREATE", collection, null, error);
+					errorLog({ action: "CREATE", collection, error });
 					continue;
 				}
 			}
@@ -57,7 +59,11 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		const schema = await getSchema();
 		const query = new services.ItemsService(collection, { database, schema });
 		if (!schema.collections[collection]) {
-			errorLog("INDEX", collection, null, "Collection does not exists");
+			errorLog({
+				action: "INDEX",
+				collection,
+				error: "Collection does not exists",
+			});
 			return;
 		}
 		const pk = schema.collections[collection].primary;
@@ -74,7 +80,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		try {
 			await indexer.deleteItem(collection, id);
 		} catch (error) {
-			errorLog("delete", collection, id, error);
+			errorLog({ action: "DELETE", collection, id, error });
 		}
 	}
 
@@ -92,7 +98,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 				await indexer.deleteItem(collection, id);
 			}
 		} catch (error) {
-			errorLog("update", collection, id, error);
+			errorLog({ action: "UPDATE", collection, id, error });
 		}
 	}
 
@@ -107,8 +113,8 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 			filter: extensionConfig.collections[collection].filter || [],
 		});
 
-		if (extensionConfig.collections[collection].formatter) {
-			return extensionConfig.collections[collection].formatter(data, {
+		if (extensionConfig.collections[collection].transform) {
+			return extensionConfig.collections[collection].transform(data, {
 				striptags,
 				flattenObject,
 				objectMap,
@@ -152,11 +158,12 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		throw Error("SEARCHSYNC: Configuration file does not exists.");
 	}
 
-	function errorLog(action, collection, id, error) {
-		console.warn(
-			"SEARCHSYNC",
-			`Error when ${action} ${collection}/${id || ""}`,
-			error ? "" : error.toString()
-		);
+	function errorLog(log) {
+		if (!extensionConfig.logger) return;
+		if (extensionConfig.logger) {
+			console.error("SEARCHSYNC", log);
+		} else {
+			extensionConfig.logger.error("SEARCHSYNC", log);
+		}
 	}
 };

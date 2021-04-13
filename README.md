@@ -64,7 +64,7 @@ module.exports = {
 				status: "published",
 			},
 			fields: ["title", "teaser", "body", "thumbnail.id"],
-			formatter: (item, { flattenObject, striptags }) => {
+			transform: (item, { flattenObject, striptags }) => {
 				item = flattenObject(item);
 				item.body = striptags(item.body);
 				return item;
@@ -81,11 +81,16 @@ module.exports = {
 - `collections` object that contain definition of how to index items
 - `collections.*.filter` the filter query in format like directus on which item must match to be indexed
 - `collections.*.fields` array of fields that will be indexed in directus format
-- `collections.*.formatter` (Applied on js files only) a callback to return transformed data for indexing.
+- `collections.*.transform` (Applied on js files only) a callback to return transformed/formatted data for indexing.
 
-Collection formatter callback
+Collection transformation callback
 
 ```javascript
+/**
+ * @param {Object} item
+ * @param {{striptags, flattenObject, objectMap}} tools
+ * @returns {Object}
+ */
 function (item, { striptags, flattenObject, objectMap }) {
 	return item
 }
