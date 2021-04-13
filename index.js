@@ -1,8 +1,6 @@
-module.exports = function registerHook({ services, env, database }) {
-	const { schemaInspector } = require(env.DIRECTUS_DEV
-		? require.main.path + "/../dist/database"
-		: "directus/dist/database");
+const { flattenObject, objectMap } = require('./utils');
 
+module.exports = function registerHook({ services, env, database, getSchema }) {
 	const extensionConfig = require(env.EXTENSION_SEARCHSYNC_CONFIG ||
 		"./config.json");
 
@@ -54,9 +52,9 @@ module.exports = function registerHook({ services, env, database }) {
 	}
 
 	async function reindexCollection(collection) {
-		const schema = await schemaInspector.overview();
+		const schema = await getSchema();
 		const query = new services.ItemsService(collection, { database, schema });
-		const pk = schema[collection].primary;
+		const pk = schema['tables'][collection].primary;
 		const items = await query.readByQuery({
 			fields: [pk],
 			filter: extensionConfig.collections[collection].filter || [],
@@ -78,7 +76,7 @@ module.exports = function registerHook({ services, env, database }) {
 		const body = await getItemObject(collection, id, schema);
 		try {
 			if (body) {
-				indexer.updateItem(collection, id, body, schema[collection].primary);
+				indexer.updateItem(collection, id, body, schema['tables'][collection].primary);
 			} else {
 				indexer.deleteItem(collection, id);
 			}
@@ -92,10 +90,23 @@ module.exports = function registerHook({ services, env, database }) {
 			knex: database,
 			schema: schema,
 		});
-		return await query.readByKey(id, {
+		let data = await query.readByKey(id, {
 			fields: extensionConfig.collections[collection].fields,
 			filter: extensionConfig.collections[collection].filter || [],
 		});
+
+		if (extensionConfig.collections[collection].flatten) {
+			data = flattenObject(data);
+		}
+		if (extensionConfig.collections[collection].stripHtml) {
+			data = objectMap(data,
+				(value) => typeof value === 'string' 
+					? value.replace(/(<([^>]+)>)/gi, " ")
+					: value
+			);
+		}
+
+		return data;
 	}
 
 	function hookEventHandler(callback, input) {
