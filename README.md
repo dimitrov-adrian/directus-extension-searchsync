@@ -8,9 +8,10 @@
 
 ### Environment variables
 
-`EXTENSION_SEARCHSYNC_CONFIG` path to `config.json`, if not set then `<extension_directory>/config.json` will be used.
+- `EXTENSION_SEARCHSYNC_CONFIG` to `json` or `js` configuration file. If not specified, then
+  will lookup on same directory like `.env` file
 
-### Example `config.json`
+### Example `searchsync.config.json`
 
 ```json
 {
@@ -47,6 +48,32 @@
 }
 ```
 
+### Example `searchsync.config.js`
+
+```javascript
+module.exports = {
+	server: {
+		type: "meilisearch",
+		host: "http://search:7700",
+		key: "the-private-key",
+	},
+	reindexOnStart: true,
+	collections: {
+		pages: {
+			filter: {
+				status: "published",
+			},
+			fields: ["title", "teaser", "body", "thumbnail.id"],
+			formatter: (item, { flattenObject, striptags }) => {
+				item = flattenObject(item);
+				item.body = striptags(item.body);
+				return item;
+			},
+		},
+	},
+};
+```
+
 ### References
 
 - `server` holds configuration for the search engine
@@ -54,6 +81,15 @@
 - `collections` object that contain definition of how to index items
 - `collections.*.filter` the filter query in format like directus on which item must match to be indexed
 - `collections.*.fields` array of fields that will be indexed in directus format
+- `collections.*.formatter` (Applied on js files only) a callback to return transformed data for indexing.
+
+Collection formatter callback
+
+```javascript
+function (item, { striptags, flattenObject, objectMap }) {
+	return item
+}
+```
 
 ##### Meilisearch server config
 
@@ -75,7 +111,7 @@
 }
 ```
 
-##### ElasticSearch server config
+##### Algolia server config
 
 ```json
 {

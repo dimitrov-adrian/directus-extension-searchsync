@@ -1,9 +1,10 @@
-const { flattenObject, objectMap } = require("./utils");
+const { join, dirname } = require("path");
+const { existsSync } = require("fs");
 const striptags = require("striptags");
+const { flattenObject, objectMap } = require("./utils");
 
 module.exports = function registerHook({ services, env, database, getSchema }) {
-	const extensionConfig = require(env.EXTENSION_SEARCHSYNC_CONFIG ||
-		"./config.json");
+	const extensionConfig = getConfig(getConfigFile());
 
 	if (!("collections" in extensionConfig)) {
 		throw Error('Broken config file. Missing "collections" section.');
@@ -55,6 +56,10 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 	async function reindexCollection(collection) {
 		const schema = await getSchema();
 		const query = new services.ItemsService(collection, { database, schema });
+		if (!schema.collections[collection]) {
+			errorLog("INDEX", collection, null, "Collection does not exists");
+			return;
+		}
 		const pk = schema.collections[collection].primary;
 		const items = await query.readByQuery({
 			fields: [pk],
@@ -67,7 +72,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 
 	async function deleteItemIndex(collection, id) {
 		try {
-			indexer.deleteItem(collection, id);
+			await indexer.deleteItem(collection, id);
 		} catch (error) {
 			errorLog("delete", collection, id, error);
 		}
@@ -77,14 +82,14 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		const body = await getItemObject(collection, id, schema);
 		try {
 			if (body) {
-				indexer.updateItem(
+				await indexer.updateItem(
 					collection,
 					id,
 					body,
 					schema.collections[collection].primary
 				);
 			} else {
-				indexer.deleteItem(collection, id);
+				await indexer.deleteItem(collection, id);
 			}
 		} catch (error) {
 			errorLog("update", collection, id, error);
@@ -97,19 +102,17 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 			schema: schema,
 		});
 
-		let data = await query.readByKey(id, {
+		const data = await query.readByKey(id, {
 			fields: extensionConfig.collections[collection].fields,
 			filter: extensionConfig.collections[collection].filter || [],
 		});
 
-		if (extensionConfig.collections[collection].flatten) {
-			data = flattenObject(data);
-		}
-
-		if (extensionConfig.collections[collection].stripHtml) {
-			data = objectMap(data, (value) =>
-				typeof value === "string" ? striptags(value) : value
-			);
+		if (extensionConfig.collections[collection].formatter) {
+			return extensionConfig.collections[collection].formatter(data, {
+				striptags,
+				flattenObject,
+				objectMap,
+			});
 		}
 
 		return data;
@@ -123,6 +126,30 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		for (const item of items) {
 			callback(input.collection, item, input.schema);
 		}
+	}
+
+	function getConfig(configFile) {
+		const config = require(configFile);
+		if (typeof config === "function") return config();
+		return config;
+	}
+
+	function getConfigFile() {
+		if (env.EXTENSION_SEARCHSYNC_CONFIG) {
+			return env.EXTENSION_SEARCHSYNC_CONFIG;
+		}
+
+		const configPath = dirname(env.CONFIG_PATH);
+
+		if (existsSync(join(configPath, "searchsync.config.json"))) {
+			return join(configPath, "searchsync.config.json");
+		}
+
+		if (existsSync(join(configPath, "searchsync.config.js"))) {
+			return join(configPath, "searchsync.config.js");
+		}
+
+		throw Error("SEARCHSYNC: Configuration file does not exists.");
 	}
 
 	function errorLog(action, collection, id, error) {

@@ -27,7 +27,7 @@ function objectMap(object, mapFn) {
 		if (value instanceof Object) {
 			result[key] = value;
 		} else {
-			result[key] = mapFn(object[key]);
+			result[key] = mapFn(object[key], key);
 		}
 		return result;
 	}, {});
