@@ -28,7 +28,9 @@ On docker cotainer it's by default under `/directus` directory.
 - `collections.*.fields` array of fields that will be indexed in Directus format
 - `collections.*.transform` (Could be defined only if config file is .js) a callback to return transformed/formatted data for indexing.
 
-### Example `searchsync.config.json`
+### Examples
+
+#### `searchsync.config.json`
 
 ```json
 {
@@ -65,7 +67,7 @@ On docker cotainer it's by default under `/directus` directory.
 }
 ```
 
-### Example `searchsync.config.js`
+#### `searchsync.config.js`
 
 ```javascript
 module.exports = {
@@ -82,18 +84,25 @@ module.exports = {
 			},
 			fields: ["title", "teaser", "body", "thumbnail.id"],
 			transform: (item, { flattenObject, striptags }) => {
-				item = flattenObject(item);
-				item.body = striptags(item.body);
-				return item;
+				return {
+					...flattenObject(item),
+					body: striptags(item.body),
+					someCustomValue: "Hello World!",
+				};
 			},
 		},
 	},
 };
 
 // Or functional way
-module.exports = ({ services, env, database, getSchema }) => {
+module.exports = ({ env }) => {
 	return {
-		// ...
+		server: {
+			// ...
+		},
+		collections: {
+			// ...
+		},
 	};
 };
 ```
@@ -111,7 +120,9 @@ function (item, { striptags, flattenObject, objectMap }) {
 }
 ```
 
-##### Meilisearch server config
+#### Search engines config references
+
+##### Meilisearch
 
 ```json
 {
@@ -121,7 +132,7 @@ function (item, { striptags, flattenObject, objectMap }) {
 }
 ```
 
-##### ElasticSearch server config
+##### ElasticSearch
 
 ```json
 {
@@ -130,7 +141,7 @@ function (item, { striptags, flattenObject, objectMap }) {
 }
 ```
 
-##### Algolia server config
+##### Algolia
 
 ```json
 {
