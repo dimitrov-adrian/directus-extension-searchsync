@@ -2,6 +2,7 @@ const { join, dirname } = require("path");
 const { existsSync } = require("fs");
 const striptags = require("striptags");
 const { flattenObject, objectMap } = require("./utils");
+const availableIndexers = require("./indexers");
 
 module.exports = function registerHook({ services, env, database, getSchema }) {
 	const extensionConfig = getConfig(getConfigFile(), {
@@ -21,7 +22,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		throw Error('SEARCHSYNC: Broken config file. Missing "server" section.');
 	}
 
-	const indexer = require(`./indexers/${extensionConfig.server.type}`)(
+	const indexer = availableIndexers[extensionConfig.server.type](
 		extensionConfig.server
 	);
 
