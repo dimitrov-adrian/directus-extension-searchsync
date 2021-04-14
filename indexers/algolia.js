@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-module.exports = function algolia(config, errorLog) {
+module.exports = function algolia(config) {
 	const axiosConfig = {
 		headers: {
 			"Content-Type": "application/json; charset=UTF-8",

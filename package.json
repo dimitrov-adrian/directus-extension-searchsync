@@ -7,6 +7,14 @@
   },
   "main": "index.js",
   "license": "MIT",
+  "homepage": "https://github.com/dimitrov-adrian/directus-extension-searchsync",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dimitrov-adrian/directus-extension-searchsync.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dimitrov-adrian/directus-extension-searchsync/issues"
+  },
   "dependencies": {
     "axios": "^0.21.1",
     "striptags": "^3.1.1"
