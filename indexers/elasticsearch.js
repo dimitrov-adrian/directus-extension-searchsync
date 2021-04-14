@@ -8,6 +8,10 @@ module.exports = function elasticsearch(config) {
 		},
 	};
 
+	if (!config.host) {
+		throw Error("No HOST set. The server.host is mandatory.");
+	}
+
 	return {
 		createIndex,
 		dropIndex,

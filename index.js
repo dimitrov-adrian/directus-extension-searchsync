@@ -4,7 +4,12 @@ const striptags = require("striptags");
 const { flattenObject, objectMap } = require("./utils");
 
 module.exports = function registerHook({ services, env, database, getSchema }) {
-	const extensionConfig = getConfig(getConfigFile());
+	const extensionConfig = getConfig(getConfigFile(), {
+		services,
+		env,
+		database,
+		getSchema,
+	});
 
 	if (!extensionConfig.collections) {
 		throw Error(
@@ -22,9 +27,9 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 
 	return {
 		"server.start": initCollectionIndexes,
-		"items.create": hookEventHandler.bind(null, updateItemIndex),
-		"items.update": hookEventHandler.bind(null, updateItemIndex),
-		"items.delete": hookEventHandler.bind(null, deleteItemIndex),
+		"items.create": hookItemEventHandler.bind(null, updateItemIndex),
+		"items.update": hookItemEventHandler.bind(null, updateItemIndex),
+		"items.delete": hookItemEventHandler.bind(null, deleteItemIndex),
 	};
 
 	async function initCollectionIndexes() {
@@ -36,23 +41,23 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 					errorLog({ action: "DROP", collection, error });
 				}
 
-				try {
-					await indexer.createIndex(collection);
-				} catch (error) {
-					errorLog({ action: "CREATE", collection, error });
-					continue;
+				if (createCollectionIndex(collection)) {
+					reindexCollection(collection);
 				}
-
-				reindexCollection(collection);
 			} else {
-				try {
-					await indexer.createIndex(collection);
-				} catch (error) {
-					errorLog({ action: "CREATE", collection, error });
-					continue;
-				}
+				createCollectionIndex(collection);
 			}
 		}
+	}
+
+	async function createCollectionIndex(collection) {
+		try {
+			await indexer.createIndex(collection);
+		} catch (error) {
+			errorLog({ action: "CREATE", collection, error });
+			return false;
+		}
+		return true;
 	}
 
 	async function reindexCollection(collection) {
@@ -124,25 +129,28 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		return data;
 	}
 
-	function hookEventHandler(callback, input) {
-		if (!(input.collection in extensionConfig.collections)) {
-			return;
-		}
+	function hookItemEventHandler(callback, input) {
+		if (!extensionConfig.collections[input.collection]) return;
 		const items = Array.isArray(input.item) ? input.item : [input.item];
 		for (const item of items) {
 			callback(input.collection, item, input.schema);
 		}
 	}
 
-	function getConfig(configFile) {
+	function getConfig(configFile, deps) {
 		const config = require(configFile);
-		if (typeof config === "function") return config();
+		if (typeof config === "function") return config(deps);
 		return config;
 	}
 
 	function getConfigFile() {
-		if (env.EXTENSION_SEARCHSYNC_CONFIG) {
-			return env.EXTENSION_SEARCHSYNC_CONFIG;
+		if (env.EXTENSION_SEARCHSYNC_CONFIG_PATH) {
+			if (!existsSync(env.EXTENSION_SEARCHSYNC_CONFIG_PATH)) {
+				throw Error(
+					`SEARCHSYNC: ENV EXTENSION_SEARCHSYNC_CONFIG_PATH is set but file ${env.EXTENSION_SEARCHSYNC_CONFIG_PATH} does not exists.`
+				);
+			}
+			return env.EXTENSION_SEARCHSYNC_CONFIG_PATH;
 		}
 
 		const configPath = dirname(env.CONFIG_PATH);
@@ -156,16 +164,17 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		}
 
 		throw Error(
-			`SEARCHSYNC: Configuration file does not exists in ${configPath}/searchsync.config.[json|js]`
+			`SEARCHSYNC: Configuration file does not exists in ${configPath}/searchsync.config.<json|js>`
 		);
 	}
 
 	function errorLog(log) {
-		if (!extensionConfig.logger) return;
-		if (extensionConfig.logger) {
-			console.error("SEARCHSYNC", log);
-		} else {
+		if (extensionConfig.logger === false) return;
+
+		if (extensionConfig.logger && "error" in extensionConfig.logger) {
 			extensionConfig.logger.error("SEARCHSYNC", log);
+		} else {
+			console.error("SEARCHSYNC", log);
 		}
 	}
 };
