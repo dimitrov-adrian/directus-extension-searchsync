@@ -114,8 +114,8 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 			schema: schema,
 		});
 
-		const data = await query.readByKey(id, {
-			fields: extensionConfig.collections[collection].fields,
+		const data = await query.readOne(id, {
+			fields: extensionConfig.collections[collection].fields || ["*"],
 			filter: extensionConfig.collections[collection].filter || [],
 		});
 
