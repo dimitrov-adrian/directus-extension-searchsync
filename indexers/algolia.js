@@ -33,7 +33,7 @@ module.exports = function algolia(config) {
 
 	async function dropIndex(collection) {
 		try {
-			return await axios.delete(`${endpoint}/${collection}`, axiosConfig);
+			return await axios.post(`${endpoint}/${collection}/clear`, null, axiosConfig);
 		} catch (error) {
 			if (error.response && error.response.status === 404) {
 				return;
