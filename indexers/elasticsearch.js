@@ -1,8 +1,8 @@
+/**
+ * @type {import("axios").AxiosInstance}
+ */
 const axios = require("axios");
 
-/**
- * @type {import("./index.js").IndexerInterface}
- */
 module.exports = function elasticsearch(config) {
 	const axiosConfig = {
 		headers: {
@@ -26,16 +26,24 @@ module.exports = function elasticsearch(config) {
 
 	return {
 		createIndex,
-		dropIndex,
+		deleteItems,
 		deleteItem,
 		updateItem,
 	};
 
 	async function createIndex(collection) {}
 
-	async function dropIndex(collection) {
+	async function deleteItems(collection) {
 		try {
-			return await axios.post(`${config.host}/${collection}`, axiosConfig);
+			return await axios.post(
+				`${config.host}/${collection}/_delete_by_query`,
+				{
+					query: {
+						match_all: {},
+					},
+				},
+				axiosConfig
+			);
 		} catch (error) {
 			if (error.response && error.response.status === 404) return;
 			throw error;
