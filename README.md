@@ -11,6 +11,7 @@
 ## How to install
 
 Simple quick install step, just copy and paste in your Directus project root directory.
+
 ```bash
 ( source .env &&\
 	curl -o searchsync.zip -L https://github.com/dimitrov-adrian/directus-extension-searchsync/archive/refs/heads/main.zip &&\
@@ -19,6 +20,7 @@ Simple quick install step, just copy and paste in your Directus project root dir
 	cp "$EXTENSIONS_PATH/hooks/directus-extension-searchsync-main/example.searchsync.config.js" searchsync.config.js && \
 	cd "$EXTENSIONS_PATH/hooks/directus-extension-searchsync-main" && npm i)
 ```
+
 Then open the `./searchsync.config.js` file and edit, and restart directus.
 
 ## Configuration

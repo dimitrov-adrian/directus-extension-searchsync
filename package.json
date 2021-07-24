@@ -7,6 +7,9 @@
   },
   "main": "index.js",
   "license": "MIT",
+  "directus:extension": {
+    "type": "hook"
+  },
   "homepage": "https://github.com/dimitrov-adrian/directus-extension-searchsync",
   "repository": {
     "type": "git",
