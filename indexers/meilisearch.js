@@ -1,5 +1,8 @@
 const axios = require("axios");
 
+/**
+ * @type {import("./index.js").IndexerInterface}
+ */
 module.exports = function meilisearch(config) {
 	const axiosConfig = {
 		headers: config.headers || {},
@@ -25,9 +28,7 @@ module.exports = function meilisearch(config) {
 				axiosConfig
 			);
 		} catch (error) {
-			if (error.response && error.response.status === 404) {
-				return;
-			}
+			if (error.response && error.response.status === 404) return;
 			throw error;
 		}
 	}
@@ -39,9 +40,7 @@ module.exports = function meilisearch(config) {
 				axiosConfig
 			);
 		} catch (error) {
-			if (error.response && error.response.status === 404) {
-				return;
-			}
+			if (error.response && error.response.status === 404) return;
 			throw error;
 		}
 	}

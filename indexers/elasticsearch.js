@@ -1,5 +1,8 @@
 const axios = require("axios");
 
+/**
+ * @type {import("./index.js").IndexerInterface}
+ */
 module.exports = function elasticsearch(config) {
 	const axiosConfig = {
 		headers: {
@@ -9,7 +12,16 @@ module.exports = function elasticsearch(config) {
 	};
 
 	if (!config.host) {
-		throw Error("No HOST set. The server.host is mandatory.");
+		throw Error(
+			"directus-extension-searchsync: No HOST set. The server.host is mandatory."
+		);
+	}
+
+	const host = new URL(config.host);
+	if (!host.hostname || !host.pathname || host.pathname === "/") {
+		throw Error(
+			"directus-extension-searchsync: Invalid server.host, it must be like http://ee.example.com/indexname"
+		);
 	}
 
 	return {
@@ -19,29 +31,13 @@ module.exports = function elasticsearch(config) {
 		updateItem,
 	};
 
-	async function createIndex(collection) {
-		try {
-			return await axios.put(`${config.host}/${collection}`, null, axiosConfig);
-		} catch (error) {
-			if (
-				error.response &&
-				error.response.status === 400 &&
-				error.response.error &&
-				error.response.error.type === "resource_already_exists_exception"
-			) {
-				return;
-			}
-			throw error;
-		}
-	}
+	async function createIndex(collection) {}
 
 	async function dropIndex(collection) {
 		try {
-			return await axios.delete(`${config.host}/${collection}`, axiosConfig);
+			return await axios.post(`${config.host}/${collection}`, axiosConfig);
 		} catch (error) {
-			if (error.response && error.response.status === 404) {
-				return;
-			}
+			if (error.response && error.response.status === 404) return;
 			throw error;
 		}
 	}
@@ -49,20 +45,18 @@ module.exports = function elasticsearch(config) {
 	async function deleteItem(collection, id) {
 		try {
 			return await axios.delete(
-				`${config.host}/${collection}/_doc/${id}`,
+				`${config.host}/${collection}/${id}`,
 				axiosConfig
 			);
 		} catch (error) {
-			if (error.response && error.response.status === 404) {
-				return;
-			}
+			if (error.response && error.response.status === 404) return;
 			throw error;
 		}
 	}
 
 	async function updateItem(collection, id, data) {
 		return await axios.post(
-			`${config.host}/${collection}/_doc/${id}`,
+			`${config.host}/${collection}/${id}`,
 			data,
 			axiosConfig
 		);

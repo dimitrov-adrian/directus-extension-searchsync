@@ -14,17 +14,36 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 
 	if (!extensionConfig.collections) {
 		throw Error(
-			'SEARCHSYNC: Broken config file. Missing "collections" section.'
+			'directus-extension-searchsync: Broken config file. Missing "collections" section.'
 		);
 	}
 
 	if (!extensionConfig.server) {
-		throw Error('SEARCHSYNC: Broken config file. Missing "server" section.');
+		throw Error(
+			'directus-extension-searchsync: Broken config file. Missing "server" section.'
+		);
 	}
 
 	const indexer = availableIndexers[extensionConfig.server.type](
 		extensionConfig.server
 	);
+
+	const logger =
+		typeof extensionConfig.logger === "object"
+			? extensionConfig.logger
+			: {
+					warn: (...args) => {
+						if (env.LOG_LEVEL === "fatal" && env.LOG_LEVEL === "error") return;
+						console.warn("directus-extension-searchsync", ...args);
+					},
+					error: (...args) => {
+						console.error("directus-extension-searchsync", ...args);
+					},
+					debug: (...args) => {
+						if (env.LOG_LEVEL !== "debug" && env.LOG_LEVEL !== "trace") return;
+						console.error("directus-extension-searchsync", ...args);
+					},
+			  };
 
 	return {
 		"server.start": initCollectionIndexes,
@@ -39,10 +58,13 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 				try {
 					await indexer.dropIndex(collection);
 				} catch (error) {
-					errorLog({ action: "DROP", collection, error });
+					logger.warn(
+						`Cannot drop collection ${collection}. ${error.toString()}`
+					);
+					logger.debug(error);
 				}
 
-				if (createCollectionIndex(collection)) {
+				if (await createCollectionIndex(collection)) {
 					reindexCollection(collection);
 				}
 			} else {
@@ -55,7 +77,10 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		try {
 			await indexer.createIndex(collection);
 		} catch (error) {
-			errorLog({ action: "CREATE", collection, error });
+			logger.error(
+				`Cannot create collection ${collection}. ${error.toString()}`
+			);
+			logger.debug(error);
 			return false;
 		}
 		return true;
@@ -65,11 +90,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		const schema = await getSchema();
 		const query = new services.ItemsService(collection, { database, schema });
 		if (!schema.collections[collection]) {
-			errorLog({
-				action: "INDEX",
-				collection,
-				error: "Collection does not exists",
-			});
+			logger.warn(`Collection ${collection} does not exists`);
 			return;
 		}
 		const pk = schema.collections[collection].primary;
@@ -86,7 +107,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		try {
 			await indexer.deleteItem(collection, id);
 		} catch (error) {
-			errorLog({ action: "DELETE", collection, id, error });
+			logger.warn(`Cannot delete ${collection}/${id}`);
 		}
 	}
 
@@ -104,7 +125,8 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 				await indexer.deleteItem(collection, id);
 			}
 		} catch (error) {
-			errorLog({ action: "UPDATE", collection, id, error });
+			logger.warn(`Cannot update ${collection}/${id}. ${error.toString()}`);
+			logger.debug(error);
 		}
 	}
 
@@ -148,7 +170,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		if (env.EXTENSION_SEARCHSYNC_CONFIG_PATH) {
 			if (!existsSync(env.EXTENSION_SEARCHSYNC_CONFIG_PATH)) {
 				throw Error(
-					`SEARCHSYNC: ENV EXTENSION_SEARCHSYNC_CONFIG_PATH is set but file ${env.EXTENSION_SEARCHSYNC_CONFIG_PATH} does not exists.`
+					`directus-extension-searchsync: ENV EXTENSION_SEARCHSYNC_CONFIG_PATH is set but file ${env.EXTENSION_SEARCHSYNC_CONFIG_PATH} does not exists.`
 				);
 			}
 			return env.EXTENSION_SEARCHSYNC_CONFIG_PATH;
@@ -165,17 +187,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		}
 
 		throw Error(
-			`SEARCHSYNC: Configuration file does not exists in ${configPath}/searchsync.config.<json|js>`
+			`directus-extension-searchsync: Configuration file does not exists in ${configPath}/searchsync.config.<json|js>`
 		);
-	}
-
-	function errorLog(log) {
-		if (extensionConfig.logger === false) return;
-
-		if (extensionConfig.logger && "error" in extensionConfig.logger) {
-			extensionConfig.logger.error("SEARCHSYNC", log);
-		} else {
-			console.error("SEARCHSYNC", log);
-		}
 	}
 };
