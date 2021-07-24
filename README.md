@@ -10,18 +10,30 @@
 
 ## How to install
 
+### Install as a dependency in `package.json`
+
+```json
+{
+	"dependencies": {
+		"directus-extension-searchsync": "dimitrov-adrian/directus-extension-searchsync#v1.0.0-rc.85"
+	}
+}
+```
+
+Then do `npm install`
+
+### Install as custom extension in `./extensions`
+
 Simple quick install step, just copy and paste in your Directus project root directory.
 
 ```bash
-( source .env &&\
-	curl -o searchsync.zip -L https://github.com/dimitrov-adrian/directus-extension-searchsync/archive/refs/heads/main.zip &&\
-	unzip searchsync.zip -d "$EXTENSIONS_PATH/hooks" &&\
-	rm searchsync.zip &&\
-	cp "$EXTENSIONS_PATH/hooks/directus-extension-searchsync-main/example.searchsync.config.js" searchsync.config.js && \
-	cd "$EXTENSIONS_PATH/hooks/directus-extension-searchsync-main" && npm i)
+# Go your directus extensions directory
+cd hooks
+curl -LO https://github.com/dimitrov-adrian/directus-extension-searchsync/archive/refs/heads/main.zip
+unzip main.zip
+cd directus-extension-searchsync-main
+npm install
 ```
-
-Then open the `./searchsync.config.js` file and edit, and restart directus.
 
 ## Configuration
 
