@@ -1,8 +1,8 @@
+/**
+ * @type {import("axios").AxiosInstance}
+ */
 const axios = require("axios");
 
-/**
- * @type {import("./index.js").IndexerInterface}
- */
 module.exports = function algolia(config) {
 	const axiosConfig = {
 		headers: {
@@ -31,16 +31,20 @@ module.exports = function algolia(config) {
 
 	return {
 		createIndex,
-		dropIndex,
+		deleteItems,
 		deleteItem,
 		updateItem,
 	};
 
 	async function createIndex(collection) {}
 
-	async function dropIndex(collection) {
+	async function deleteItems(collection) {
 		try {
-			return await axios.post(`${endpoint}/${collection}/clear`, null, axiosConfig);
+			return await axios.post(
+				`${endpoint}/${collection}/clear`,
+				null,
+				axiosConfig
+			);
 		} catch (error) {
 			if (error.response && error.response.status === 404) return;
 			throw error;

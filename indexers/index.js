@@ -1,9 +1,9 @@
 /**
  * @typedef {(config: object) => {
  *   createIndex: (collection: string) => Promise,
- *   dropIndex: (collection: string) => Promise,
+ *   deleteItems: (collection: string) => Promise,
  *   deleteItem: (collection: string, id: string) => Promise,
- *   updateItem: (collection: string, id: string, data: object) => Promise,
+ *   updateItem: (collection: string, id: string, data: object, pk: ?string) => Promise,
  * }} IndexerInterface
  */
 

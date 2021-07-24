@@ -1,8 +1,8 @@
+/**
+ * @type {import("axios").AxiosInstance}
+ */
 const axios = require("axios");
 
-/**
- * @type {import("./index.js").IndexerInterface}
- */
 module.exports = function meilisearch(config) {
 	const axiosConfig = {
 		headers: config.headers || {},
@@ -14,14 +14,14 @@ module.exports = function meilisearch(config) {
 
 	return {
 		createIndex,
-		dropIndex,
+		deleteItems,
 		deleteItem,
 		updateItem,
 	};
 
 	async function createIndex(collection) {}
 
-	async function dropIndex(collection) {
+	async function deleteItems(collection) {
 		try {
 			return await axios.delete(
 				`${config.host}/indexes/${collection}`,

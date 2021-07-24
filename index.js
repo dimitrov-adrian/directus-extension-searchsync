@@ -56,7 +56,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		for (const collection of Object.keys(extensionConfig.collections)) {
 			if (extensionConfig.reindexOnStart) {
 				try {
-					await indexer.dropIndex(collection);
+					await indexer.deleteItems(collection);
 				} catch (error) {
 					logger.warn(
 						`Cannot drop collection ${collection}. ${error.toString()}`
