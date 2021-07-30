@@ -61,10 +61,17 @@ module.exports = function algolia(config) {
 	}
 
 	async function updateItem(collection, id, data) {
-		return await axios.put(
-			`${endpoint}/${collection}/${id}`,
-			data,
-			axiosConfig
-		);
+		try {
+			return await axios.put(
+				`${endpoint}/${collection}/${id}`,
+				data,
+				axiosConfig
+			);
+		} catch (error) {
+			if (error.response) {
+				throw { message: error.toString(), response: error.response };
+			}
+			throw error;
+		}
 	}
 };

@@ -12,6 +12,7 @@
  */
 module.exports = {
 	algolia: require("./algolia"),
-	elasticsearch: require("./elasticsearch"),
 	meilisearch: require("./meilisearch"),
+	elasticsearch: require("./elasticsearch"),
+	elasticsearch_legacy: require("./elasticsearch-legacy.js"),
 };

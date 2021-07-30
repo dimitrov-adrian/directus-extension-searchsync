@@ -35,13 +35,16 @@ On docker cotainer it's by default under `/directus` directory.
 
 ### References
 
-- `server` holds configuration for the search engine
-- `reindexOnStart` boolean causing to reindex all documents upon Directus starts
-- `collections` object that contain definition of how to index items
-- `collections.*.filter` the filter query in format like Directus on which item must match to be indexed (check [Filter Rules
+- `server: object` holds configuration for the search engine
+- `reindexOnStart: boolean` boolean causing to reindex all documents upon Directus starts
+- `collections: object` object that contain definition of how to index items
+- `collections.*.filter: object` the filter query in format like Directus on which item must match to be indexed (check [Filter Rules
   ](https://docs.directus.io/reference/filter-rules/#filter-rules))
-- `collections.*.fields` array of fields that will be indexed in Directus format
-- `collections.*.transform` (Could be defined only if config file is .js) a callback to return transformed/formatted data for indexing.
+- `collections.*.fields: array<string>` array of fields that will be indexed in Directus format
+- `collections.*.transform: function` (Could be defined only if config file is .js) a callback to return transformed/formatted data for indexing.
+- `collectionNamePrefix: string` prefix collection name when stored in search index
+- `collectionNameTransform: function` functional callback that is called to transform collection name
+- `collectionField: string` if set, such field with value the collection name will be add to the indexed document
 
 ### Examples
 
@@ -147,15 +150,6 @@ function (item, { striptags, flattenObject, objectMap }) {
 }
 ```
 
-##### ElasticSearch
-
-```json
-{
-	"type": "elasticsearch",
-	"host": "http://search:9200/projectindex"
-}
-```
-
 ##### Algolia
 
 ```json
@@ -163,5 +157,27 @@ function (item, { striptags, flattenObject, objectMap }) {
 	"type": "algolia",
 	"appId": "Application-Id",
 	"key": "secret-api-key"
+}
+```
+
+##### ElasticSearch
+
+New typeless behaviour, use collection names as index name.
+
+```json
+{
+	"type": "elasticsearch",
+	"host": "http://search:9200/"
+}
+```
+
+##### ElasticSearch for 5.x and 6.x
+
+Old type behaviour, use collection names as types.
+
+```json
+{
+	"type": "elasticsearch_legacy",
+	"host": "http://search:9200/projectindex"
 }
 ```

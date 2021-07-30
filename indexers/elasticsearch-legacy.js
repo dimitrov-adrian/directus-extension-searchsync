@@ -3,13 +3,25 @@
  */
 const axios = require("axios");
 
-module.exports = function meilisearch(config) {
+module.exports = function elasticsearchLegacy(config) {
 	const axiosConfig = {
-		headers: config.headers || {},
+		headers: {
+			"Content-Type": "application/json",
+			...(config.headers || {}),
+		},
 	};
 
-	if (config.key) {
-		axiosConfig.headers["X-Meili-API-Key"] = config.key;
+	if (!config.host) {
+		throw Error(
+			"directus-extension-searchsync: No HOST set. The server.host is mandatory."
+		);
+	}
+
+	const host = new URL(config.host);
+	if (!host.hostname || !host.pathname || host.pathname === "/") {
+		throw Error(
+			"directus-extension-searchsync: Invalid server.host, it must be like http://ee.example.com/indexname"
+		);
 	}
 
 	return {
@@ -23,8 +35,13 @@ module.exports = function meilisearch(config) {
 
 	async function deleteItems(collection) {
 		try {
-			return await axios.delete(
-				`${config.host}/indexes/${collection}`,
+			return await axios.post(
+				`${config.host}/${collection}/_delete_by_query`,
+				{
+					query: {
+						match_all: {},
+					},
+				},
 				axiosConfig
 			);
 		} catch (error) {
@@ -36,7 +53,7 @@ module.exports = function meilisearch(config) {
 	async function deleteItem(collection, id) {
 		try {
 			return await axios.delete(
-				`${config.host}/indexes/${collection}/documents/${id}`,
+				`${config.host}/${collection}/${id}`,
 				axiosConfig
 			);
 		} catch (error) {
@@ -45,11 +62,11 @@ module.exports = function meilisearch(config) {
 		}
 	}
 
-	async function updateItem(collection, id, data, pk) {
+	async function updateItem(collection, id, data) {
 		try {
 			return await axios.post(
-				`${config.host}/indexes/${collection}/documents?primaryKey=${pk}`,
-				[{ id, ...data }],
+				`${config.host}/${collection}/${id}`,
+				data,
 				axiosConfig
 			);
 		} catch (error) {

@@ -34,14 +34,14 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 			: {
 					warn: (...args) => {
 						if (env.LOG_LEVEL === "fatal" && env.LOG_LEVEL === "error") return;
-						console.warn("directus-extension-searchsync", ...args);
+						console.warn("directus-extension-searchsync:", ...args);
 					},
 					error: (...args) => {
-						console.error("directus-extension-searchsync", ...args);
+						console.error("directus-extension-searchsync:", ...args);
 					},
 					debug: (...args) => {
 						if (env.LOG_LEVEL !== "debug" && env.LOG_LEVEL !== "trace") return;
-						console.error("directus-extension-searchsync", ...args);
+						console.error("directus-extension-searchsync:", ...args);
 					},
 			  };
 
@@ -55,30 +55,32 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 	async function initCollectionIndexes() {
 		for (const collection of Object.keys(extensionConfig.collections)) {
 			if (extensionConfig.reindexOnStart) {
+				const collectionIndex = transformCollectionName(collection);
 				try {
-					await indexer.deleteItems(collection);
+					await indexer.deleteItems(collectionIndex);
 				} catch (error) {
 					logger.warn(
-						`Cannot drop collection ${collection}. ${error.toString()}`
+						`Cannot drop collection ${collectionIndex}. ${error.toString()}`
 					);
 					logger.debug(error);
 				}
 
 				if (await createCollectionIndex(collection)) {
-					reindexCollection(collection);
+					await reindexCollection(collection);
 				}
 			} else {
-				createCollectionIndex(collection);
+				await createCollectionIndex(collection);
 			}
 		}
 	}
 
 	async function createCollectionIndex(collection) {
+		const collectionIndex = transformCollectionName(collection);
 		try {
-			await indexer.createIndex(collection);
+			await indexer.createIndex(collectionIndex);
 		} catch (error) {
 			logger.error(
-				`Cannot create collection ${collection}. ${error.toString()}`
+				`Cannot create collection ${collectionIndex}. ${error.toString()}`
 			);
 			logger.debug(error);
 			return false;
@@ -104,28 +106,32 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 	}
 
 	async function deleteItemIndex(collection, id) {
+		const collectionIndex = transformCollectionName(collection);
 		try {
-			await indexer.deleteItem(collection, id);
+			await indexer.deleteItem(collectionIndex, id);
 		} catch (error) {
-			logger.warn(`Cannot delete ${collection}/${id}`);
+			logger.warn(`Cannot delete ${collectionIndex}/${id}`);
 		}
 	}
 
 	async function updateItemIndex(collection, id, schema) {
 		const body = await getItemObject(collection, id, schema);
+		const collectionIndex = transformCollectionName(collection);
 		try {
 			if (body) {
 				await indexer.updateItem(
-					collection,
+					collectionIndex,
 					id,
 					body,
 					schema.collections[collection].primary
 				);
 			} else {
-				await indexer.deleteItem(collection, id);
+				await indexer.deleteItem(collectionIndex, id);
 			}
 		} catch (error) {
-			logger.warn(`Cannot update ${collection}/${id}. ${error.toString()}`);
+			logger.warn(
+				`Cannot update ${collectionIndex}/${id}. ${error.toString()}`
+			);
 			logger.debug(error);
 		}
 	}
@@ -141,6 +147,10 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 			filter: extensionConfig.collections[collection].filter || [],
 		});
 
+		if (extensionConfig.collectionField) {
+			data[extensionConfig.collectionField] = collection;
+		}
+
 		if (extensionConfig.collections[collection].transform) {
 			return extensionConfig.collections[collection].transform(data, {
 				striptags,
@@ -150,6 +160,16 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		}
 
 		return data;
+	}
+
+	function transformCollectionName(collection) {
+		if (extensionConfig.collectionNamePrefix) {
+			collection = extensionConfig.collectionNamePrefix + collection;
+		}
+		if (extensionConfig.collectionNameTransform) {
+			return extensionConfig.transformCollectionName(collection);
+		}
+		return collection;
 	}
 
 	function hookItemEventHandler(callback, input) {
