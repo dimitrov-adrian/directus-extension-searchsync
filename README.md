@@ -54,8 +54,7 @@ On docker cotainer it's by default under `/directus` directory.
   ](https://docs.directus.io/reference/filter-rules/#filter-rules))
 - `collections.*.fields: array<string>` array of fields that will be indexed in Directus format
 - `collections.*.transform: function` (Could be defined only if config file is .js) a callback to return transformed/formatted data for indexing.
-- `collectionNamePrefix: string` prefix collection name when stored in search index
-- `collectionNameTransform: function` functional callback that is called to transform collection name
+- `collections.*.indexName: string` force collection name when storing in search index
 - `collectionField: string` if set, such field with value the collection name will be add to the indexed document
 
 ### Examples

@@ -55,7 +55,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 	async function initCollectionIndexes() {
 		for (const collection of Object.keys(extensionConfig.collections)) {
 			if (extensionConfig.reindexOnStart) {
-				const collectionIndex = transformCollectionName(collection);
+				const collectionIndex = getCollectionIndexName(collection);
 				try {
 					await indexer.deleteItems(collectionIndex);
 				} catch (error) {
@@ -75,7 +75,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 	}
 
 	async function createCollectionIndex(collection) {
-		const collectionIndex = transformCollectionName(collection);
+		const collectionIndex = getCollectionIndexName(collection);
 		try {
 			await indexer.createIndex(collectionIndex);
 		} catch (error) {
@@ -106,7 +106,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 	}
 
 	async function deleteItemIndex(collection, id) {
-		const collectionIndex = transformCollectionName(collection);
+		const collectionIndex = getCollectionIndexName(collection);
 		try {
 			await indexer.deleteItem(collectionIndex, id);
 		} catch (error) {
@@ -116,7 +116,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 
 	async function updateItemIndex(collection, id, schema) {
 		const body = await getItemObject(collection, id, schema);
-		const collectionIndex = transformCollectionName(collection);
+		const collectionIndex = getCollectionIndexName(collection);
 		try {
 			if (body) {
 				await indexer.updateItem(
@@ -162,22 +162,8 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		return data;
 	}
 
-	function transformCollectionName(collection) {
-		if (extensionConfig.collectionNamePrefix) {
-			collection = extensionConfig.collectionNamePrefix + collection;
-		}
-		if (extensionConfig.collectionNameTransform) {
-			return extensionConfig.transformCollectionName(collection);
-		}
-		return collection;
-	}
-
-	function hookItemEventHandler(callback, input) {
-		if (!extensionConfig.collections[input.collection]) return;
-		const items = Array.isArray(input.item) ? input.item : [input.item];
-		for (const item of items) {
-			callback(input.collection, item, input.schema);
-		}
+	function getCollectionIndexName(collection) {
+		return extensionConfig.collections[collection].indexName || collection;
 	}
 
 	function getConfig(configFile, deps) {
