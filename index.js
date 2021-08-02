@@ -147,16 +147,21 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 			filter: extensionConfig.collections[collection].filter || [],
 		});
 
-		if (extensionConfig.collectionField) {
-			data[extensionConfig.collectionField] = collection;
+		if (extensionConfig.collections[collection].collectionField) {
+			data[extensionConfig.collections[collection].collectionField] =
+				collection;
 		}
 
 		if (extensionConfig.collections[collection].transform) {
-			return extensionConfig.collections[collection].transform(data, {
-				striptags,
-				flattenObject,
-				objectMap,
-			});
+			return extensionConfig.collections[collection].transform(
+				data,
+				{
+					striptags,
+					flattenObject,
+					objectMap,
+				},
+				collection
+			);
 		}
 
 		return data;

@@ -47,15 +47,15 @@ On docker cotainer it's by default under `/directus` directory.
 
 ### References
 
-- `server: object` holds configuration for the search engine
-- `reindexOnStart: boolean` boolean causing to reindex all documents upon Directus starts
-- `collections: object` object that contain definition of how to index items
-- `collections.*.filter: object` the filter query in format like Directus on which item must match to be indexed (check [Filter Rules
+- `server: object` Holds configuration for the search engine
+- `reindexOnStart: boolean` Performs full reindex of all documents upon Directus starts
+- `collections: object` Indexing data definition
+- `collections.<collection>.filter: object` The filter query in format like Directus on which item must match to be indexed (check [Filter Rules
   ](https://docs.directus.io/reference/filter-rules/#filter-rules))
-- `collections.*.fields: array<string>` array of fields that will be indexed in Directus format
-- `collections.*.transform: function` (Could be defined only if config file is .js) a callback to return transformed/formatted data for indexing.
-- `collections.*.indexName: string` force collection name when storing in search index
-- `collectionField: string` if set, such field with value the collection name will be add to the indexed document
+- `collections.<collection>.fields: array<string>` Fields that will be indexed in Directus format
+- `collections.<collection>.transform: function` (Could be defined only if config file is .js) A callback to return transformed/formatted data for indexing.
+- `collections.<collection>.indexName: string` Force collection name when storing in search index
+- `collections.<collection>.collectionField: string` If set, such field with value of the collection name will be added to the indexed document. Useful with conjuction with the _indexName_ option
 
 ### Examples
 
@@ -142,9 +142,10 @@ module.exports = ({ env }) => {
 /**
  * @param {Object} item
  * @param {{striptags, flattenObject, objectMap}} utils
+ * @param {String} collectionName
  * @returns {Object}
  */
-function (item, { striptags, flattenObject, objectMap }) {
+function (item, { striptags, flattenObject, objectMap }, collectionName) {
 	return item
 }
 ```
