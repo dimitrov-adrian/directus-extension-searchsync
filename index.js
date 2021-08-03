@@ -28,19 +28,19 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		extensionConfig.server
 	);
 
+	const verbose = env.LOG_LEVEL === "debug" || env.LOG_LEVEL === "trace";
+
 	const logger =
 		typeof extensionConfig.logger === "object"
 			? extensionConfig.logger
 			: {
 					warn: (...args) => {
-						if (env.LOG_LEVEL === "fatal" && env.LOG_LEVEL === "error") return;
 						console.warn("directus-extension-searchsync:", ...args);
 					},
 					error: (...args) => {
 						console.error("directus-extension-searchsync:", ...args);
 					},
 					debug: (...args) => {
-						if (env.LOG_LEVEL !== "debug" && env.LOG_LEVEL !== "trace") return;
 						console.error("directus-extension-searchsync:", ...args);
 					},
 			  };
@@ -62,7 +62,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 					logger.warn(
 						`Cannot drop collection ${collectionIndex}. ${error.toString()}`
 					);
-					logger.debug(error);
+					if (verbose) logger.debug(error);
 				}
 
 				if (await createCollectionIndex(collection)) {
@@ -79,10 +79,11 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		try {
 			await indexer.createIndex(collectionIndex);
 		} catch (error) {
-			logger.error(
-				`Cannot create collection ${collectionIndex}. ${error.toString()}`
+			logger.warn(
+				`Cannot create collection ${collectionIndex}.`,
+				error.response?.data?.error || error.toString()
 			);
-			logger.debug(error);
+			if (verbose) logger.debug(error);
 			return false;
 		}
 		return true;
@@ -110,7 +111,11 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		try {
 			await indexer.deleteItem(collectionIndex, id);
 		} catch (error) {
-			logger.warn(`Cannot delete ${collectionIndex}/${id}`);
+			logger.warn(
+				`Cannot delete ${collectionIndex}/${id}.`,
+				error.response?.data?.error || error.toString()
+			);
+			if (verbose) logger.debug(error);
 		}
 	}
 
@@ -130,9 +135,10 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 			}
 		} catch (error) {
 			logger.warn(
-				`Cannot update ${collectionIndex}/${id}. ${error.toString()}`
+				`Cannot update ${collectionIndex}/${id}.`,
+				error.response?.data?.error || error.toString()
 			);
-			logger.debug(error);
+			if (verbose) logger.debug(error);
 		}
 	}
 
@@ -165,6 +171,14 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		}
 
 		return data;
+	}
+
+	function hookItemEventHandler(callback, input) {
+		if (!extensionConfig.collections[input.collection]) return;
+		const items = Array.isArray(input.item) ? input.item : [input.item];
+		for (const item of items) {
+			callback(input.collection, item, input.schema);
+		}
 	}
 
 	function getCollectionIndexName(collection) {

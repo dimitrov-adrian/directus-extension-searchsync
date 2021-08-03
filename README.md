@@ -15,23 +15,22 @@
 ```json
 {
 	"dependencies": {
-		"directus-extension-searchsync": "dimitrov-adrian/directus-extension-searchsync#v1.0.0-rc.85"
+		"directus-extension-searchsync": "^dimitrov-adrian/directus-extension-searchsync#v1.0.0-rc.85"
 	}
 }
 ```
 
 Then do `npm install`
 
-### Install as custom extension in `./extensions`
+### Install latest from git as custom extension in `./extensions`
 
 Simple quick install step, just copy and paste in your Directus project root directory.
 
 ```bash
 # Go your directus extensions directory
 cd hooks
-curl -LO https://github.com/dimitrov-adrian/directus-extension-searchsync/archive/refs/heads/main.zip
-unzip main.zip
-cd directus-extension-searchsync-main
+git clone https://github.com/dimitrov-adrian/directus-extension-searchsync.git
+cd directus-extension-searchsync
 npm install
 ```
 
@@ -86,7 +85,10 @@ On docker cotainer it's by default under `/directus` directory.
 				"rating"
 			]
 		},
-		"blog_posts": {
+		"posts": {
+			"indexName": "blog_posts",
+			"collectionField": "_collection",
+
 			"filter": {
 				"status": "published"
 			},
