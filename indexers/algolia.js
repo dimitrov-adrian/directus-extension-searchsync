@@ -1,30 +1,26 @@
 /**
  * @type {import("axios").AxiosInstance}
  */
-const axios = require("axios");
+const axios = require('axios');
 
 module.exports = function algolia(config) {
 	const axiosConfig = {
 		headers: {
-			"Content-Type": "application/json; charset=UTF-8",
+			'Content-Type': 'application/json; charset=UTF-8',
 			...(config.headers || {}),
 		},
 	};
 
 	if (config.key) {
-		axiosConfig.headers["X-Algolia-API-Key"] = config.key;
+		axiosConfig.headers['X-Algolia-API-Key'] = config.key;
 	} else {
-		throw Error(
-			"directus-extension-searchsync: No API Key set. The server.key is mandatory."
-		);
+		throw Error('directus-extension-searchsync: No API Key set. The server.key is mandatory.');
 	}
 
 	if (config.appId) {
-		axiosConfig.headers["X-Algolia-Application-Id"] = config.appId;
+		axiosConfig.headers['X-Algolia-Application-Id'] = config.appId;
 	} else {
-		throw Error(
-			"directus-extension-searchsync: No Application ID set. The server.appId is mandatory."
-		);
+		throw Error('directus-extension-searchsync: No Application ID set. The server.appId is mandatory.');
 	}
 
 	const endpoint = `https://${config.appId}.algolia.net/1/indexes`;
@@ -40,11 +36,7 @@ module.exports = function algolia(config) {
 
 	async function deleteItems(collection) {
 		try {
-			return await axios.post(
-				`${endpoint}/${collection}/clear`,
-				null,
-				axiosConfig
-			);
+			return await axios.post(`${endpoint}/${collection}/clear`, null, axiosConfig);
 		} catch (error) {
 			if (error.response && error.response.status === 404) return;
 			throw error;
@@ -62,11 +54,7 @@ module.exports = function algolia(config) {
 
 	async function updateItem(collection, id, data) {
 		try {
-			return await axios.put(
-				`${endpoint}/${collection}/${id}`,
-				data,
-				axiosConfig
-			);
+			return await axios.put(`${endpoint}/${collection}/${id}`, data, axiosConfig);
 		} catch (error) {
 			if (error.response) {
 				throw { message: error.toString(), response: error.response };

@@ -1,7 +1,7 @@
 /**
  * @type {import("axios").AxiosInstance}
  */
-const axios = require("axios");
+const axios = require('axios');
 
 module.exports = function meilisearch(config) {
 	const axiosConfig = {
@@ -9,7 +9,7 @@ module.exports = function meilisearch(config) {
 	};
 
 	if (config.key) {
-		axiosConfig.headers["X-Meili-API-Key"] = config.key;
+		axiosConfig.headers['X-Meili-API-Key'] = config.key;
 	}
 
 	return {
@@ -23,10 +23,7 @@ module.exports = function meilisearch(config) {
 
 	async function deleteItems(collection) {
 		try {
-			return await axios.delete(
-				`${config.host}/indexes/${collection}`,
-				axiosConfig
-			);
+			return await axios.delete(`${config.host}/indexes/${collection}`, axiosConfig);
 		} catch (error) {
 			if (error.response && error.response.status === 404) return;
 			throw error;
@@ -35,10 +32,7 @@ module.exports = function meilisearch(config) {
 
 	async function deleteItem(collection, id) {
 		try {
-			return await axios.delete(
-				`${config.host}/indexes/${collection}/documents/${id}`,
-				axiosConfig
-			);
+			return await axios.delete(`${config.host}/indexes/${collection}/documents/${id}`, axiosConfig);
 		} catch (error) {
 			if (error.response && error.response.status === 404) return;
 			throw error;

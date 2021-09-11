@@ -1,27 +1,23 @@
 /**
  * @type {import("axios").AxiosInstance}
  */
-const axios = require("axios");
+const axios = require('axios');
 
 module.exports = function elasticsearchLegacy(config) {
 	const axiosConfig = {
 		headers: {
-			"Content-Type": "application/json",
+			'Content-Type': 'application/json',
 			...(config.headers || {}),
 		},
 	};
 
 	if (!config.host) {
-		throw Error(
-			"directus-extension-searchsync: No HOST set. The server.host is mandatory."
-		);
+		throw Error('directus-extension-searchsync: No HOST set. The server.host is mandatory.');
 	}
 
 	const host = new URL(config.host);
-	if (!host.hostname || !host.pathname || host.pathname === "/") {
-		throw Error(
-			"directus-extension-searchsync: Invalid server.host, it must be like http://ee.example.com/indexname"
-		);
+	if (!host.hostname || !host.pathname || host.pathname === '/') {
+		throw Error('directus-extension-searchsync: Invalid server.host, it must be like http://ee.example.com/indexname');
 	}
 
 	return {
@@ -52,10 +48,7 @@ module.exports = function elasticsearchLegacy(config) {
 
 	async function deleteItem(collection, id) {
 		try {
-			return await axios.delete(
-				`${config.host}/${collection}/${id}`,
-				axiosConfig
-			);
+			return await axios.delete(`${config.host}/${collection}/${id}`, axiosConfig);
 		} catch (error) {
 			if (error.response && error.response.status === 404) return;
 			throw error;
@@ -64,11 +57,7 @@ module.exports = function elasticsearchLegacy(config) {
 
 	async function updateItem(collection, id, data) {
 		try {
-			return await axios.post(
-				`${config.host}/${collection}/${id}`,
-				data,
-				axiosConfig
-			);
+			return await axios.post(`${config.host}/${collection}/${id}`, data, axiosConfig);
 		} catch (error) {
 			if (error.response) {
 				throw { message: error.toString(), response: error.response };

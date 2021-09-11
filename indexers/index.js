@@ -11,8 +11,8 @@
  * @type {Record<string, IndexerInterface>}
  */
 module.exports = {
-	algolia: require("./algolia"),
-	meilisearch: require("./meilisearch"),
-	elasticsearch: require("./elasticsearch"),
-	elasticsearch_legacy: require("./elasticsearch-legacy.js"),
+	algolia: require('./algolia'),
+	meilisearch: require('./meilisearch'),
+	elasticsearch: require('./elasticsearch'),
+	elasticsearch_legacy: require('./elasticsearch-legacy.js'),
 };
