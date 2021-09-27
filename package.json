@@ -1,6 +1,6 @@
 {
   "name": "directus-extension-searchsync",
-  "version": "v1.0.0-rc.88",
+  "version": "v1.0.0-rc.94",
   "author": {
     "email": "dimitrov.adrian@gmail.com",
     "name": "Adrian Dimitrov"
@@ -11,7 +11,7 @@
     "type": "hook",
     "path": "index.js",
     "source": "index.js",
-    "host": "^v9.0.0-rc.86",
+    "host": "^v9.0.0-rc.94",
     "hidden": false
   },
   "homepage": "https://github.com/dimitrov-adrian/directus-extension-searchsync",

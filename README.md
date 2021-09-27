@@ -15,7 +15,7 @@
 ```json
 {
 	"dependencies": {
-		"directus-extension-searchsync": "^dimitrov-adrian/directus-extension-searchsync#v1.0.0-rc.85"
+		"directus-extension-searchsync": "^dimitrov-adrian/directus-extension-searchsync#v1.0.0-rc.94"
 	}
 }
 ```
@@ -34,6 +34,15 @@ cd directus-extension-searchsync
 npm install
 ```
 
+## CLI Commands
+
+Usage:
+`npx directus extension:searchsync <subdommand>`
+
+Subcommands:
+- `index` - Reindex all documents from configuration
+
+
 ## Configuration
 
 Default configuration file should be placed under the same directory like the Directus `.env` file with name `searchsync.config.js` or `searchsync.config.js` or could be given by `EXTENSION_SEARCHSYNC_CONFIG_PATH` variable
@@ -47,6 +56,7 @@ On docker cotainer it's by default under `/directus` directory.
 ### References
 
 - `server: object` Holds configuration for the search engine
+- `batchLimit: number` Batch limit when performing index/reindex (defaults to 100)
 - `reindexOnStart: boolean` Performs full reindex of all documents upon Directus starts
 - `collections: object` Indexing data definition
 - `collections.<collection>.filter: object` The filter query in format like Directus on which item must match to be indexed (check [Filter Rules
@@ -67,7 +77,8 @@ On docker cotainer it's by default under `/directus` directory.
 		"host": "http://search:7700",
 		"key": "the-private-key"
 	},
-	"reindexOnStart": true,
+	"batchLimit": 100,
+	"reindexOnStart": false,
 	"collections": {
 		"products": {
 			"filter": {
@@ -107,7 +118,8 @@ module.exports = {
 		host: "http://search:7700",
 		key: "the-private-key",
 	},
-	reindexOnStart: true,
+	reindexOnStart: false,
+	batchLimit: 100,
 	collections: {
 		pages: {
 			filter: {

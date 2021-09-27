@@ -4,7 +4,7 @@ const striptags = require('striptags');
 const { flattenObject, objectMap } = require('./utils');
 const availableIndexers = require('./indexers');
 
-module.exports = function registerHook({ services, env, database, getSchema }) {
+module.exports = function registerHook({ services, env, database, getSchema, logger }) {
 	const extensionConfig = getConfig(getConfigFile(), {
 		services,
 		env,
@@ -24,45 +24,36 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 
 	const verbose = env.LOG_LEVEL === 'debug' || env.LOG_LEVEL === 'trace';
 
-	const logger =
-		typeof extensionConfig.logger === 'object'
-			? extensionConfig.logger
-			: {
-					warn: (...args) => {
-						console.warn('directus-extension-searchsync:', ...args);
-					},
-					error: (...args) => {
-						console.error('directus-extension-searchsync:', ...args);
-					},
-					debug: (...args) => {
-						console.error('directus-extension-searchsync:', ...args);
-					},
-			  };
-
-	return {
-		'server.start': initCollectionIndexes,
+	const hooks = {
+		'cli.init.before': registerCli,
+		'server.start': onServerStart,
 		'items.create': hookItemEventHandler.bind(null, updateItemIndex),
 		'items.update': hookItemEventHandler.bind(null, updateItemIndex),
 		'items.delete': hookItemEventHandler.bind(null, deleteItemIndex),
 	};
 
-	async function initCollectionIndexes() {
-		for (const collection of Object.keys(extensionConfig.collections)) {
-			if (extensionConfig.reindexOnStart) {
-				const collectionIndex = getCollectionIndexName(collection);
-				try {
-					await indexer.deleteItems(collectionIndex);
-				} catch (error) {
-					logger.warn(`Cannot drop collection ${collectionIndex}. ${error.toString()}`);
-					if (verbose) logger.debug(error);
-				}
+	return hooks;
 
-				if (await createCollectionIndex(collection)) {
-					await reindexCollection(collection);
-				}
-			} else {
-				await createCollectionIndex(collection);
-			}
+	function registerCli({ program }) {
+		const usersCommand = program.command('extension:searchsync');
+		usersCommand
+			.command('index')
+			.description('directus-extension-searchsync: Reindex documents from all collections')
+			.action(initCollectionIndexesCommand);
+	}
+
+	async function onServerStart() {
+		if (!extensionConfig.reindexOnStart) return;
+		await initCollectionIndexes();
+	}
+
+	async function initCollectionIndexesCommand() {
+		try {
+			await initCollectionIndexes();
+			process.exit(0);
+		} catch (error) {
+			logger.error(error.toString());
+			process.exit(1)
 		}
 	}
 
@@ -71,9 +62,16 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 		try {
 			await indexer.createIndex(collectionIndex);
 		} catch (error) {
-			logger.warn(`Cannot create collection ${collectionIndex}.`, error.response?.data?.error || error.toString());
+			logger.warn(`directus-extension-searchsync: Cannot create collection ${collectionIndex}.`, error.response?.data?.error || error.toString());
 			if (verbose) logger.debug(error);
 			return false;
+		}
+		return true;
+	}
+
+	async function initCollectionIndexes() {
+		for (const collection of Object.keys(extensionConfig.collections)) {
+			await reindexCollection(collection);
 		}
 		return true;
 	}
@@ -81,26 +79,44 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 	async function reindexCollection(collection) {
 		const schema = await getSchema();
 		const query = new services.ItemsService(collection, { database, schema });
+
 		if (!schema.collections[collection]) {
-			logger.warn(`Collection ${collection} does not exists`);
+			logger.warn(`directus-extension-searchsync: Collection ${collection} does not exists`);
 			return;
 		}
+
+		try {
+			await indexer.deleteItems(getCollectionIndexName(collection));
+		} catch (error) {
+			logger.warn(`directus-extension-searchsync: Cannot drop collection ${collection}. ${error.toString()}`);
+			if (verbose) logger.debug(error);
+		}
+
 		const pk = schema.collections[collection].primary;
-		const items = await query.readByQuery({
-			fields: [pk],
-			filter: extensionConfig.collections[collection].filter || [],
-		});
-		for (const item of items) {
-			await updateItemIndex(collection, item[pk], schema);
+		const limit = extensionConfig.batchLimit || 100;
+
+		for (let offset = 0; ; offset += limit) {
+			const items = await query.readByQuery({
+				fields: [pk],
+				filter: extensionConfig.collections[collection].filter || [],
+				limit,
+				offset,
+			});
+
+			if (!items || !items.length) break;
+			for (const item of items) {
+				await updateItemIndex(collection, item[pk], schema);
+			}
 		}
 	}
+
 
 	async function deleteItemIndex(collection, id) {
 		const collectionIndex = getCollectionIndexName(collection);
 		try {
 			await indexer.deleteItem(collectionIndex, id);
 		} catch (error) {
-			logger.warn(`Cannot delete ${collectionIndex}/${id}.`, error.response?.data?.error || error.toString());
+			logger.warn(`directus-extension-searchsync: Cannot delete ${collectionIndex}/${id}.`, error.response?.data?.error || error.toString());
 			if (verbose) logger.debug(error);
 		}
 	}
@@ -115,7 +131,7 @@ module.exports = function registerHook({ services, env, database, getSchema }) {
 				await indexer.deleteItem(collectionIndex, id);
 			}
 		} catch (error) {
-			logger.warn(`Cannot update ${collectionIndex}/${id}.`, error.response?.data?.error || error.toString());
+			logger.warn(`directus-extension-searchsync: Cannot index ${collectionIndex}/${id}.`, error.response?.data?.error || error.toString());
 			if (verbose) logger.debug(error);
 		}
 	}
