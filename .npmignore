@@ -1,1 +1,3 @@
 .editorconfig
+.eslintrc.json
+.prettierrc

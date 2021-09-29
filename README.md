@@ -15,7 +15,7 @@
 ```json
 {
 	"dependencies": {
-		"directus-extension-searchsync": "^dimitrov-adrian/directus-extension-searchsync#v1.0.0-rc.94"
+		"directus-extension-searchsync": "^dimitrov-adrian/directus-extension-searchsync#v1.0.0-rc.95"
 	}
 }
 ```
@@ -112,7 +112,7 @@ On docker cotainer it's by default under `/directus` directory.
 #### `searchsync.config.js`
 
 ```javascript
-module.exports = {
+const config = {
 	server: {
 		type: "meilisearch",
 		host: "http://search:7700",
@@ -137,16 +137,12 @@ module.exports = {
 	},
 };
 
-// Or functional way
+// Use as object.
+module.exports = config;
+
+// Or use a function instead.
 module.exports = ({ env }) => {
-	return {
-		server: {
-			// ...
-		},
-		collections: {
-			// ...
-		},
-	};
+	return config;
 };
 ```
 
