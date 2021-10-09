@@ -4,8 +4,13 @@
 		"browser": false,
 		"node": true
 	},
-	"plugins": ["prettier"],
-	"extends": ["eslint:recommended", "prettier"],
+	"plugins": [
+		"prettier"
+	],
+	"extends": [
+		"eslint:recommended",
+		"prettier"
+	],
 	"rules": {
 		"prettier/prettier": "error"
 	},
