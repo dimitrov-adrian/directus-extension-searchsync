@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"target": "esnext",
+		"module": "esnext",
+		"jsx": "preserve",
+		"importHelpers": true,
+		"skipLibCheck": true,
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": false,
+		"resolveJsonModule": true,
+		"baseUrl": ".",
+		"lib": [
+			"esnext"
+		]
+	},
+	"include": [
+		"lib/**/*.js",
+	],
+	"exclude": [
+		"node_modules"
+	]
+}

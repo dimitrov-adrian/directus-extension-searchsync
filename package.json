@@ -1,27 +1,19 @@
 {
   "name": "directus-extension-searchsync",
-  "version": "v1.0.0-rc.95",
+  "version": "v1.0.0-rc.101",
   "author": {
-    "email": "dimitrov.adrian@gmail.com",
+    "email": "dimitrov.adrian+gh@gmail.com",
     "name": "Adrian Dimitrov"
   },
-  "main": "index.js",
   "license": "MIT",
   "directus:extension": {
     "type": "hook",
-    "path": "index.js",
-    "source": "index.js",
-    "host": "^v9.0.0-rc.94",
+    "path": "lib/index.js",
+    "source": "lib/index.js",
+    "host": "^v9.0.0-rc.101",
     "hidden": false
   },
   "homepage": "https://github.com/dimitrov-adrian/directus-extension-searchsync",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/dimitrov-adrian/directus-extension-searchsync.git"
-  },
-  "bugs": {
-    "url": "https://github.com/dimitrov-adrian/directus-extension-searchsync/issues"
-  },
   "dependencies": {
     "axios": "^0.21.4",
     "striptags": "^3.2.0"
@@ -29,5 +21,8 @@
   "devDependencies": {
     "eslint": "^7.32.0",
     "prettier": "^2.4.1"
-  }
+  },
+  "files": [
+    "lib"
+  ]
 }
