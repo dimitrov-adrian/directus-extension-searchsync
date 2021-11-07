@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"checkJs": true,
+		"strict": true,
+		"skipDefaultLibCheck": false,
+		"skipLibCheck": true,
+		"lib": [
+			"es2019"
+		],
+		"types": [
+			"node"
+		]
+	},
+	"include": [
+		"types.ts",
+		"lib/**/*.js",
+	],
+	"exclude": [
+		"node_modules"
+	]
+}
