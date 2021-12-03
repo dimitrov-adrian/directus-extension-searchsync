@@ -1,6 +1,6 @@
 {
   "name": "directus-extension-searchsync",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "email": "dimitrov.adrian+gh@gmail.com",
     "name": "Adrian Dimitrov"
@@ -18,8 +18,8 @@
     "striptags": "^3.2.0"
   },
   "devDependencies": {
-    "eslint": "^7.32.0",
-    "prettier": "^2.4.1",
+    "eslint": "^8.3.0",
+    "prettier": "^2.5.0",
     "@directus/shared": "^9.0.0"
   },
   "peerDependencies": {
