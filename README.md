@@ -1,7 +1,5 @@
 # Simple search engine indexer
 
-> ### This extension is in development and could have breaking changes until Directus 9 official releases.
-
 ## Supported engines
 
 - MeiliSearch
@@ -15,7 +13,7 @@
 ```json
 {
 	"dependencies": {
-		"directus-extension-searchsync": "^dimitrov-adrian/directus-extension-searchsync#v1.0.0-rc.95"
+		"directus-extension-searchsync": "^dimitrov-adrian/directus-extension-searchsync"
 	}
 }
 ```
