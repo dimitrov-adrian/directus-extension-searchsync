@@ -8,17 +8,13 @@
 
 ## How to install
 
-### Install as a dependency in `package.json`
+In your Directus installation root
 
-```json
-{
-	"dependencies": {
-		"directus-extension-searchsync": "^dimitrov-adrian/directus-extension-searchsync"
-	}
-}
+```
+npm install dimitrov-adrian/directus-extension-searchsync
 ```
 
-Then do `npm install`
+Restart directus
 
 ## CLI Commands
 
