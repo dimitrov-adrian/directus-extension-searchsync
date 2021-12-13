@@ -29,7 +29,17 @@ Subcommands:
 The extension uses [cosmiconfig](https://github.com/davidtheclark/cosmiconfig#cosmiconfig) for configuration loader with
 `searchsync` block or if `EXTENSION_SEARCHSYNC_CONFIG_PATH` is set will try to use the file.
 
-Simply `searchsync.config.js` or `searchsync.config.js` should do the trick.
+So, configuration should comes from one of next files:
+
+- package.json `"searchsync":{...}`
+- .searchsyncrc
+- .searchsyncrc.json
+- .searchsyncrc.yaml
+- .searchsyncrc.yml
+- .searchsyncrc.js
+- .searchsyncrc.cjs
+- searchsync.config.js
+- searchsync.config.cjs
 
 ### Environment variables
 
@@ -50,7 +60,7 @@ Simply `searchsync.config.js` or `searchsync.config.js` should do the trick.
 
 ### Examples
 
-#### `searchsync.config.json`
+#### `.searchsyncrc.json`
 
 ```json
 {
@@ -82,7 +92,7 @@ Simply `searchsync.config.js` or `searchsync.config.js` should do the trick.
 }
 ```
 
-#### `searchsync.config.js`
+#### `.searchsyncrc.js`
 
 ```javascript
 const config = {
