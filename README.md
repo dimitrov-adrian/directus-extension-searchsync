@@ -66,7 +66,7 @@ So, configuration should comes from one of next files:
 {
 	"server": {
 		"type": "meilisearch",
-		"host": "http://search:7700",
+		"host": "http://search:7700/myindex",
 		"key": "the-private-key"
 	},
 	"batchLimit": 100,
