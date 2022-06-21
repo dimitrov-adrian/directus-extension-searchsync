@@ -171,6 +171,27 @@ New typeless behaviour, use collection names as index name.
 }
 ```
 
+Use Authentification.
+
+```json
+{
+	"type": "elasticsearch",
+	"host": "http://search:9200/",
+	"username": "elastic",
+	"password": "somepassword"
+}
+```
+
+Ignore ssl-certificate-error.
+
+```json
+{
+	"type": "elasticsearch",
+	"host": "http://search:9200/",
+	"ignore_cert": true,
+}
+```
+
 ##### ElasticSearch for 5.x and 6.x
 
 Old type behaviour, use collection names as types.
