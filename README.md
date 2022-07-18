@@ -14,6 +14,12 @@ In your Directus installation root
 npm install dimitrov-adrian/directus-extension-searchsync
 ```
 
+or yarn
+
+```
+yarn add https://github.com/dimitrov-adrian/directus-extension-searchsync
+```
+
 Restart directus
 
 ## CLI Commands
