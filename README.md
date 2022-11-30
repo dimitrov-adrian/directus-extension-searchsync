@@ -56,7 +56,9 @@ So, configuration should comes from one of next files:
 - `reindexOnStart: boolean` Performs full reindex of all documents upon Directus starts
 - `collections: object` Indexing data definition
 - `collections.<collection>.filter: object` The filter query in format like Directus on which item must match to be
-  indexed (check [Filter Rules ](https://docs.directus.io/reference/filter-rules/#filter-rules))
+  indexed (check [Filter Rules](https://docs.directus.io/reference/filter-rules/#filter-rules))
+- `collections.<collection>.deep: object` The deep query in format like Directus on which item must match to be
+  indexed (check [Deep Parameter](https://docs.directus.io/reference/query.html#deep))
 - `collections.<collection>.fields: array<string>` Fields that will be indexed in Directus format
 - `collections.<collection>.transform: function` (Could be defined only if config file is .js) A callback to return
   transformed/formatted data for indexing.
